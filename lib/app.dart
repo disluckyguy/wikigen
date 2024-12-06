@@ -1,12 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:wiki_repository/wiki_repository.dart';
+import 'package:wikigen/home/bloc/home_bloc.dart';
 import 'package:wikigen/home/view/home_page.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 
 const _brandBlue = Color(0xFF1E88E5);
 
-
 class App extends StatelessWidget {
-  const App({super.key});
+  const App({required wikiRepositoy, super.key})
+      : _wikiRepositoy = wikiRepositoy;
+
+  final WikiRepositoy _wikiRepositoy;
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => HomeBloc(_wikiRepositoy),
+      child: const AppView(),
+    );
+  }
+}
+
+class AppView extends StatelessWidget {
+  const AppView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -48,5 +64,4 @@ class App extends StatelessWidget {
       },
     );
   }
-    
-  }
+}

@@ -1,15 +1,42 @@
 part of 'home_bloc.dart';
 
 @immutable
-sealed class HomeEvent {}
-
-class HomeWikiClicked extends HomeEvent {}
-
-class HomeQueryEntered extends HomeEvent {
-  HomeQueryEntered(this.query);
-  final String query;
+sealed class HomeEvent extends Equatable {
+  @override
+  List<Object?> get props => [];
 }
 
-class NavigatedToSettings extends HomeEvent {}
+class HomeWikiClicked extends HomeEvent {
+  @override
+  List<Object?> get props => [];
+}
 
-class NavigatedToTrash extends HomeEvent {}
+class HomeQueryChanged extends HomeEvent {
+  HomeQueryChanged(this.query);
+  final String query;
+
+  @override
+  List<Object?> get props => [query];
+}
+
+class HomeQueryEntered extends HomeEvent {
+  HomeQueryEntered();
+
+  @override
+  List<Object?> get props => [];
+}
+
+class NavigatedToHome extends HomeEvent {
+  @override
+  List<Object?> get props => [];
+}
+
+class NavigatedToSettings extends HomeEvent {
+  @override
+  List<Object?> get props => [];
+}
+
+class NavigatedToTrash extends HomeEvent {
+  @override
+  List<Object?> get props => [];
+}
