@@ -5,8 +5,9 @@ class Section {
 }
 
 class Wiki {
-  const Wiki(this.title, this.summary, this.introduction, this.sections,
+  const Wiki(this.id, this.title, this.summary, this.introduction, this.sections,
       this.createdOn, this.lastModified);
+  final int id;
   final String title;
   final String summary;
   final String introduction;

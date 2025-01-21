@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:wiki_repository/wiki_repository.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wikigen/app.dart';
 
-void main() {
-  runApp(App(wikiRepositoy: WikiRepositoy()));
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  runApp(const ProviderScope(child: App()));
 }

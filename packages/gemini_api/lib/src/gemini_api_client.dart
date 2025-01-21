@@ -1,21 +1,26 @@
 import 'package:google_generative_ai/google_generative_ai.dart';
-import 'package:http/http.dart';
 
-const apiKey = "";
+const apiKey = "AIzaSyAQWl9mNpb4BfipfU-XZF0uJRn-ue824gE";
 
 class GeminiRequestFailure implements Exception {}
 
 class GeminiApiClient {
-  Future<GenerateContentResponse> requestPrompt(
-      String prompt, double temperature, String? Instructions) async {
-    final generationConfig = GenerationConfig(temperature: temperature);
-    final model = GenerativeModel(
-      model: "gemini-1.5-flash-latest",
+
+  GeminiApiClient(double temperature, String? instructions) : model = GenerativeModel(
+      model: "gemini-2.0-flash-exp",
       apiKey: apiKey,
-      systemInstruction: Content.text(Instructions ?? ""),
+      systemInstruction: Content.text(instructions ?? ""),
+      generationConfig: GenerationConfig(temperature: temperature),
     );
+
+  GenerativeModel model;
+  Future<GenerateContentResponse> requestPrompt(String prompt) async {
+    
     final content = [Content.text(prompt)];
-    final response = model.generateContent(content);
+    final response = await model.generateContent(content);
+
     return response;
   }
+
+
 }
