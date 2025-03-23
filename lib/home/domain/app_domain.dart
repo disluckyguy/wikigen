@@ -13,8 +13,8 @@ Future<WikiRepositoy> repository(Ref ref) async {
 
 @Riverpod(keepAlive: true)
 Future<DatabaseClient> database(Ref ref) async {
-  final database = await DatabaseClient.create();
-  print(database.wikiBox.count());
+  final database = DatabaseClient();
+  print(database);
   return database;
 }
 

@@ -41,8 +41,8 @@ class WikiRepositoy {
       }
     }
 
-    return Wiki(
-        0, title, summary, introduction, sections, DateTime.now(), DateTime.now());
+    return Wiki(0, title, summary, introduction, sections, DateTime.now(),
+        DateTime.now());
   }
 
   Future<void> saveWiki(Wiki wiki, int id) async {
@@ -59,47 +59,62 @@ class WikiRepositoy {
     final model = WikiModel(id, wiki.title, wiki.summary, wiki.introduction,
         titles, contents, wiki.createdOn, wiki.lastModified);
 
-    await _databaseClient.wikiBox.putAsync(model);
+    await _databaseClient.database.saveWiki(model);
   }
 
   Future<void> removeWiki(int id) async {
-    await _databaseClient.wikiBox.removeAsync(id);
+    await _databaseClient.database.removeWiki(id);
   }
 
   Future<void> removeLast() async {
-    final models = await _databaseClient.wikiBox.getAllAsync();
-    await _databaseClient.wikiBox.removeAsync(models.last.id);
+    final models = await _databaseClient.database.allWikis;
+    await _databaseClient.database.removeWiki(models.last.id);
   }
 
   Future<Wiki> getWiki(int id) async {
-    final WikiModel wikiModel = await _databaseClient.wikiBox.getAsync(id);
+    final WikiItem wikiItem = await _databaseClient.database.getWiki(id);
 
     List<Section> sections = List.empty(growable: true);
 
-    for (var i = 0; i < wikiModel.sectionsContents.length; i++) {
-      sections.add(
-          Section(wikiModel.sectionsTitles[i], wikiModel.sectionsContents[i]));
+    for (var i = 0; i < wikiItem.sectionsContents.list.length; i++) {
+      sections.add(Section(
+          wikiItem.sectionsTitles.list[i], wikiItem.sectionsContents.list[i]));
     }
+
+    final wikiModel = Wiki(
+      wikiItem.id,
+      wikiItem.title,
+      wikiItem.summary,
+      wikiItem.introduction,
+      sections,
+      wikiItem.createdOn,
+      wikiItem.lastModified,
+    );
 
     return Wiki(id, wikiModel.title, wikiModel.summary, wikiModel.introduction,
         sections, wikiModel.createdOn, wikiModel.lastModified);
   }
 
   Future<List<Wiki>> allWikis() async {
-    final List wikiModels = await _databaseClient.wikiBox.getAllAsync();
+    final List wikiModels = await _databaseClient.database.allWikis;
 
     List<Wiki> wikis = List.empty(growable: true);
     for (var wikiModel in wikiModels) {
       List<Section> sections = List.empty(growable: true);
 
-      for (var i = 0; i < wikiModel.sectionsContents.length; i++) {
+      for (var i = 0; i < wikiModel.sectionsContents.list.length; i++) {
         sections.add(Section(
-            wikiModel.sectionsTitles[i], wikiModel.sectionsContents[i]));
+            wikiModel.sectionsTitles.list[i], wikiModel.sectionsContents.list[i]));
       }
 
-      wikis.add(Wiki(wikiModel.id, wikiModel.title, wikiModel.summary, wikiModel.introduction,
-          sections, wikiModel.createdOn, wikiModel.lastModified));
-
+      wikis.add(Wiki(
+          wikiModel.id,
+          wikiModel.title,
+          wikiModel.summary,
+          wikiModel.introduction,
+          sections,
+          wikiModel.createdOn,
+          wikiModel.lastModified));
 
       print(wikiModel.id);
     }

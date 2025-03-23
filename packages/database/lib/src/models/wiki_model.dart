@@ -1,10 +1,4 @@
-
-import 'package:objectbox/objectbox.dart';
-
-
-@Entity()
 class WikiModel {
-  @Id()
   int id;
   String title;
   String summary;

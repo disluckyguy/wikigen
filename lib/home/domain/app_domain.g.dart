@@ -22,7 +22,7 @@ final repositoryProvider = FutureProvider<WikiRepositoy>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef RepositoryRef = FutureProviderRef<WikiRepositoy>;
-String _$databaseHash() => r'a018c454929a9833f6724b750b4339d6acb9ac37';
+String _$databaseHash() => r'fce5c6c97d9ceffdef47aec772114cde6f0e1029';
 
 /// See also [database].
 @ProviderFor(database)
@@ -315,7 +315,7 @@ class _LocalWikiProviderElement extends AutoDisposeFutureProviderElement<Wiki>
   int get index => (origin as LocalWikiProvider).index;
 }
 
-String _$wikisControllerHash() => r'f715b76946bd9ca3c2a281e6d6b2d052d0c900ba';
+String _$wikisControllerHash() => r'878e6752cacbbe73d76c0b9acb3aa3e78f2e80ce';
 
 /// See also [WikisController].
 @ProviderFor(WikisController)
