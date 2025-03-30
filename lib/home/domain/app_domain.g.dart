@@ -22,11 +22,11 @@ final repositoryProvider = FutureProvider<WikiRepositoy>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef RepositoryRef = FutureProviderRef<WikiRepositoy>;
-String _$databaseHash() => r'fce5c6c97d9ceffdef47aec772114cde6f0e1029';
+String _$databaseHash() => r'cf24d88c4b517bcbb4884b3e2dc8c969e6b05fad';
 
 /// See also [database].
 @ProviderFor(database)
-final databaseProvider = FutureProvider<DatabaseClient>.internal(
+final databaseProvider = AutoDisposeFutureProvider<DatabaseClient>.internal(
   database,
   name: r'databaseProvider',
   debugGetCreateSourceHash:
@@ -37,8 +37,8 @@ final databaseProvider = FutureProvider<DatabaseClient>.internal(
 
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
-typedef DatabaseRef = FutureProviderRef<DatabaseClient>;
-String _$wikiHash() => r'fe93f08b31a0d797503b5139dcb883743ddb9ed2';
+typedef DatabaseRef = AutoDisposeFutureProviderRef<DatabaseClient>;
+String _$wikiHash() => r'8a21ea3055455e1ef92fb5ec0f2be2635498bffd';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -73,9 +73,11 @@ class WikiFamily extends Family<AsyncValue<Wiki>> {
   /// See also [wiki].
   WikiProvider call(
     String query,
+    String apiKey,
   ) {
     return WikiProvider(
       query,
+      apiKey,
     );
   }
 
@@ -85,6 +87,7 @@ class WikiFamily extends Family<AsyncValue<Wiki>> {
   ) {
     return call(
       provider.query,
+      provider.apiKey,
     );
   }
 
@@ -108,10 +111,12 @@ class WikiProvider extends AutoDisposeFutureProvider<Wiki> {
   /// See also [wiki].
   WikiProvider(
     String query,
+    String apiKey,
   ) : this._internal(
           (ref) => wiki(
             ref as WikiRef,
             query,
+            apiKey,
           ),
           from: wikiProvider,
           name: r'wikiProvider',
@@ -120,6 +125,7 @@ class WikiProvider extends AutoDisposeFutureProvider<Wiki> {
           dependencies: WikiFamily._dependencies,
           allTransitiveDependencies: WikiFamily._allTransitiveDependencies,
           query: query,
+          apiKey: apiKey,
         );
 
   WikiProvider._internal(
@@ -130,9 +136,11 @@ class WikiProvider extends AutoDisposeFutureProvider<Wiki> {
     required super.debugGetCreateSourceHash,
     required super.from,
     required this.query,
+    required this.apiKey,
   }) : super.internal();
 
   final String query;
+  final String apiKey;
 
   @override
   Override overrideWith(
@@ -148,6 +156,7 @@ class WikiProvider extends AutoDisposeFutureProvider<Wiki> {
         allTransitiveDependencies: null,
         debugGetCreateSourceHash: null,
         query: query,
+        apiKey: apiKey,
       ),
     );
   }
@@ -159,13 +168,16 @@ class WikiProvider extends AutoDisposeFutureProvider<Wiki> {
 
   @override
   bool operator ==(Object other) {
-    return other is WikiProvider && other.query == query;
+    return other is WikiProvider &&
+        other.query == query &&
+        other.apiKey == apiKey;
   }
 
   @override
   int get hashCode {
     var hash = _SystemHash.combine(0, runtimeType.hashCode);
     hash = _SystemHash.combine(hash, query.hashCode);
+    hash = _SystemHash.combine(hash, apiKey.hashCode);
 
     return _SystemHash.finish(hash);
   }
@@ -176,6 +188,9 @@ class WikiProvider extends AutoDisposeFutureProvider<Wiki> {
 mixin WikiRef on AutoDisposeFutureProviderRef<Wiki> {
   /// The parameter `query` of this provider.
   String get query;
+
+  /// The parameter `apiKey` of this provider.
+  String get apiKey;
 }
 
 class _WikiProviderElement extends AutoDisposeFutureProviderElement<Wiki>
@@ -184,9 +199,27 @@ class _WikiProviderElement extends AutoDisposeFutureProviderElement<Wiki>
 
   @override
   String get query => (origin as WikiProvider).query;
+  @override
+  String get apiKey => (origin as WikiProvider).apiKey;
 }
 
-String _$localWikiHash() => r'0a6dcc2aef12dcd34cdf8760b7863a615b14170f';
+String _$preferencesHash() => r'c6f77b8998e6c76a2f78ac8a5d1ea507f099c578';
+
+/// See also [preferences].
+@ProviderFor(preferences)
+final preferencesProvider = FutureProvider<SharedPreferencesAsync>.internal(
+  preferences,
+  name: r'preferencesProvider',
+  debugGetCreateSourceHash:
+      const bool.fromEnvironment('dart.vm.product') ? null : _$preferencesHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef PreferencesRef = FutureProviderRef<SharedPreferencesAsync>;
+String _$localWikiHash() => r'2e96b50783f37a5311195b774ccfba720ca40587';
 
 /// See also [localWiki].
 @ProviderFor(localWiki)

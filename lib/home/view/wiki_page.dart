@@ -81,12 +81,13 @@ class _SectionsExpansionPanelListState
 }
 
 class WikiPage extends ConsumerStatefulWidget {
-  const WikiPage({query = "", super.key}) : _query = query;
+  const WikiPage({required this.query, required this.apiKey, super.key});
 
-  final String _query;
+  final String query;
+  final String apiKey;
 
-  static route(String query, int? localIndex) {
-    return MaterialPageRoute(builder: (_) => WikiPage(query: query));
+  static route(String query, String apiKey, int? localIndex) {
+    return MaterialPageRoute(builder: (_) => WikiPage(query: query, apiKey: apiKey,));
   }
 
   @override
@@ -97,7 +98,7 @@ class _WikiPageState extends ConsumerState<WikiPage> {
   var isSaved = false;
   @override
   Widget build(BuildContext context) {
-    final AsyncValue<Wiki> wiki = ref.watch(WikiProvider(widget._query));
+    final AsyncValue<Wiki> wiki = ref.watch(WikiProvider(widget.query, widget.apiKey));
     final theme = Theme.of(context);
     return switch (wiki) {
       AsyncData(:final value) => Scaffold(
@@ -117,28 +118,25 @@ class _WikiPageState extends ConsumerState<WikiPage> {
             actions: [
               IconButton(
                   onPressed: () async {
-                    print(isSaved);
                     if (isSaved) {
-                      
+                      setState(() {
+                        isSaved = false;
+                      });
                       await ref
                           .read(wikisControllerProvider.notifier)
                           .removeLastWiki();
-
-                          setState(() {
-                            isSaved = false;
-                          });
                       
                     } else {
-                      
-                      await ref.read(wikisControllerProvider.notifier).addWiki(value);
-
                       setState(() {
                         isSaved = true;
                       });
-                      
+
+                      await ref
+                          .read(wikisControllerProvider.notifier)
+                          .addWiki(value);
                     }
                   },
-                  icon: Icon(isSaved? Icons.bookmark: Icons.bookmark_border))
+                  icon: Icon(isSaved ? Icons.bookmark : Icons.bookmark_border))
             ],
           ),
           body: ListView(
@@ -196,7 +194,10 @@ class LocalWikiPage extends ConsumerStatefulWidget {
   final Wiki _wiki;
 
   static route(Wiki wiki) {
-    return MaterialPageRoute(builder: (_) => LocalWikiPage(wiki: wiki,));
+    return MaterialPageRoute(
+        builder: (_) => LocalWikiPage(
+              wiki: wiki,
+            ));
   }
 
   @override
@@ -204,9 +205,12 @@ class LocalWikiPage extends ConsumerStatefulWidget {
 }
 
 class _LocalWikiPageState extends ConsumerState<LocalWikiPage> {
+  bool isSaved = true;
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.surface,
@@ -223,14 +227,25 @@ class _LocalWikiPageState extends ConsumerState<LocalWikiPage> {
         ),
         actions: [
           IconButton(
-              onPressed: () async {
-                
+            onPressed: () async {
+              if (isSaved) {
+                setState(() {
+                  isSaved = false;
+                });
                 await ref
                     .read(wikisControllerProvider.notifier)
-                    .removeWiki(widget._wiki.id);
-                Navigator.of(context).pop();
-              },
-              icon: const Icon(Icons.bookmark))
+                    .removeLastWiki();
+              } else {
+                setState(() {
+                  isSaved = true;
+                });
+                await ref
+                    .read(wikisControllerProvider.notifier)
+                    .addWiki(widget._wiki);
+              }
+            },
+            icon: Icon(isSaved ? Icons.bookmark : Icons.bookmark_border),
+          ),
         ],
       ),
       body: ListView(

@@ -14,8 +14,8 @@ class WikiRepositoy {
   final GeminiApiClient _geminiApiClient;
   final DatabaseClient _databaseClient;
 
-  Future<Wiki> requestWiki(String topic) async {
-    final response = await _geminiApiClient.requestPrompt(topic);
+  Future<Wiki> requestWiki(String topic, String apiKey) async {
+    final response = await _geminiApiClient.requestPrompt(topic, apiKey);
 
     var sections = List<Section>.empty(growable: true);
     var title = "";
@@ -115,8 +115,6 @@ class WikiRepositoy {
           sections,
           wikiModel.createdOn,
           wikiModel.lastModified));
-
-      print(wikiModel.id);
     }
 
     return wikis;

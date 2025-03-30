@@ -50,7 +50,7 @@ class AppView extends StatelessWidget {
           darkTheme: ThemeData(
             colorScheme: darkColorScheme,
           ),
-          home: const HomePage(),
+          home: const AppPage(),
           debugShowCheckedModeBanner: false,
         );
       },

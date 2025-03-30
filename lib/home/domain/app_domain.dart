@@ -1,6 +1,7 @@
 import 'package:database/database.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wiki_repository/wiki_repository.dart';
 
 part 'app_domain.g.dart';
@@ -11,17 +12,22 @@ Future<WikiRepositoy> repository(Ref ref) async {
   return WikiRepositoy(databaseClient: database);
 }
 
-@Riverpod(keepAlive: true)
+@riverpod
 Future<DatabaseClient> database(Ref ref) async {
   final database = DatabaseClient();
-  print(database);
   return database;
 }
 
+
 @riverpod
-Future<Wiki> wiki(Ref ref, String query) async {
-  final repository = await ref.watch(repositoryProvider.future);
-  return repository.requestWiki(query);
+Future<Wiki> wiki(Ref ref, String query, String apiKey) async {
+  final repository =  await ref.watch(repositoryProvider.future);
+  return repository.requestWiki(query, apiKey);
+}
+
+@Riverpod(keepAlive: true)
+Future<SharedPreferencesAsync> preferences(Ref ref) async {
+  return SharedPreferencesAsync();
 }
 
 @riverpod
