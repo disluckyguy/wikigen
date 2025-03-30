@@ -44,10 +44,10 @@ class WikisController extends _$WikisController {
     return repository.allWikis();
   }
 
-  Future<void> addWiki(Wiki wiki) async {
+  Future<void> addWiki(Wiki wiki, int id) async {
     final repository = await ref.watch(repositoryProvider.future);
     
-    await repository.saveWiki(wiki, 0);
+    await repository.saveWiki(wiki, id);
     
     ref.invalidateSelf();
 

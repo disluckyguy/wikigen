@@ -29,6 +29,7 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> saveWiki(WikiModel model) async {
     await managers.wikiItems.create((o) => o(
+      id: Value.absentIfNull(model.id != 0?  model.id : null),
           title: model.title,
           introduction: model.introduction,
           summary: model.summary,

@@ -25,12 +25,9 @@ class SettingsPage extends ConsumerWidget {
                         width: 100,
                         child: TextField(
                           controller: controller,
-                          onSubmitted: (text) async {
-                            await value.setString("api_key", text);
                           
-                          },
-                          onEditingComplete: () async {
-                            await value.setString("api_key", controller.text);
+                          onChanged: (text) async {
+                            await value.setString("api_key", text);
                           },
                         ),
                       );

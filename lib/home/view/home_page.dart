@@ -117,53 +117,58 @@ class HomePage extends ConsumerWidget {
                                 final item = value[index];
 
                                 return Card.filled(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(4.0),
-                                    child: Column(
-                                      children: [
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Padding(
-                                              padding:
-                                                  const EdgeInsets.all(8.0),
-                                              child: Text(
-                                                item.title,
-                                                style: theme
-                                                    .textTheme.titleLarge!
-                                                    .copyWith(
-                                                        fontWeight:
-                                                            FontWeight.bold),
+                                  child: InkWell(
+                                    onTap: () {
+                                      Navigator.of(context)
+                                          .push(LocalWikiPage.route(item));
+                                    },
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(4.0),
+                                      child: Column(
+                                        children: [
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Padding(
+                                                padding:
+                                                    const EdgeInsets.all(8.0),
+                                                child: Text(
+                                                  item.title,
+                                                  style: theme
+                                                      .textTheme.titleLarge!
+                                                      .copyWith(
+                                                          fontWeight:
+                                                              FontWeight.bold),
+                                                ),
                                               ),
-                                            ),
-                                            IconButton(
-                                                onPressed: () async {
-                                                  
-                                                  await ref
-                                                      .read(
-                                                          wikisControllerProvider
-                                                              .notifier)
-                                                      .removeWiki(item.id);
-                                                },
-                                                icon: const Icon(
-                                                  Icons.delete,
-                                                  size: 32,
-                                                )),
-                                          ],
-                                        ),
-                                        Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: Text(
-                                            item.introduction.length > 150
-                                                ? "${item.introduction.substring(0, 147)}..."
-                                                : item.introduction,
-                                            style: theme.textTheme.bodyMedium,
-                                            overflow: TextOverflow.visible,
-                                            softWrap: true,
+                                              IconButton(
+                                                  onPressed: () async {
+                                                    await ref
+                                                        .read(
+                                                            wikisControllerProvider
+                                                                .notifier)
+                                                        .removeWiki(item.id);
+                                                  },
+                                                  icon: const Icon(
+                                                    Icons.delete,
+                                                    size: 32,
+                                                  )),
+                                            ],
                                           ),
-                                        ),
-                                      ],
+                                          Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Text(
+                                              item.introduction.length > 150
+                                                  ? "${item.introduction.substring(0, 147)}..."
+                                                  : item.introduction,
+                                              style: theme.textTheme.bodyMedium,
+                                              overflow: TextOverflow.visible,
+                                              softWrap: true,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 );
@@ -200,9 +205,11 @@ class HomePage extends ConsumerWidget {
                     ],
                     enabled: snapshot.data?.isNotEmpty ?? false,
                     controller: _controller,
-                    onSubmitted: (value) => Navigator.of(context).push(
-                        WikiPage.route(
-                            _controller.text, snapshot.data ?? "", null)),
+                    onSubmitted: (value) {
+                      _controller.text = "";
+                      Navigator.of(context).push(WikiPage.route(
+                          _controller.text, snapshot.data ?? "", null));
+                    },
                   ),
                 );
               }),

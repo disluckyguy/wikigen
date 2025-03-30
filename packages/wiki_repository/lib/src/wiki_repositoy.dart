@@ -45,7 +45,7 @@ class WikiRepositoy {
         DateTime.now());
   }
 
-  Future<void> saveWiki(Wiki wiki, int id) async {
+  Future<void> saveWiki(Wiki wiki, int? id) async {
     List<String> titles = List.empty(growable: true);
     List<String> contents = List.empty(growable: true);
     for (var element in wiki.sections) {
@@ -56,7 +56,7 @@ class WikiRepositoy {
       contents.add(element.contents);
     }
 
-    final model = WikiModel(id, wiki.title, wiki.summary, wiki.introduction,
+    final model = WikiModel(id ?? 0, wiki.title, wiki.summary, wiki.introduction,
         titles, contents, wiki.createdOn, wiki.lastModified);
 
     await _databaseClient.database.saveWiki(model);

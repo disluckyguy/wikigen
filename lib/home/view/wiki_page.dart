@@ -8,12 +8,10 @@ class Item {
   Item({
     required this.expandedValue,
     required this.headerValue,
-    this.isExpanded = false,
   });
 
   String expandedValue;
   String headerValue;
-  bool isExpanded;
 }
 
 List<Item> generateItems(List<Section> sections) {
@@ -26,10 +24,10 @@ List<Item> generateItems(List<Section> sections) {
 }
 
 class SectionsExpansionPanelList extends StatefulWidget {
-  const SectionsExpansionPanelList({required List<Item> data, super.key})
-      : _data = data;
+  const SectionsExpansionPanelList(this.data, {super.key});
 
-  final List<Item> _data;
+  final List<Item> data;
+
   @override
   State<SectionsExpansionPanelList> createState() =>
       _SectionsExpansionPanelListState();
@@ -37,45 +35,57 @@ class SectionsExpansionPanelList extends StatefulWidget {
 
 class _SectionsExpansionPanelListState
     extends State<SectionsExpansionPanelList> {
-  _SectionsExpansionPanelListState();
-
+  var expantionData = List<bool>.empty(growable: true);
   @override
   Widget build(BuildContext context) {
+    if (expantionData.isEmpty) {
+      setState(() {
+      expantionData = List.filled(widget.data.length, false);
+    });
+    } 
     return SingleChildScrollView(
       child: Container(
-        child: _buildPanel(widget._data),
+        child: _buildPanel(context, widget.data, expantionData, (index, value) {setState(() {
+          expantionData[index] = value;
+        });}),
       ),
     );
   }
 
-  Widget _buildPanel(List<Item> data) {
+  Widget _buildPanel(
+      BuildContext context, List<Item> data, List<bool> expantionData, Function(int, bool) expantionCallback) {
     return ExpansionPanelList(
-      expansionCallback: (int index, bool isExpanded) {
-        setState(() {
-          data[index].isExpanded = isExpanded;
-        });
-      },
-      children: data.map<ExpansionPanel>((Item item) {
-        return ExpansionPanel(
-          headerBuilder: (BuildContext context, bool isExpanded) {
-            return ListTile(
-              title: Text(item.headerValue),
-            );
-          },
-          body: ListTile(
-            title: Column(
-              children: [
-                MarkdownBody(
-                  data: item.expandedValue,
-                  styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context))
-                      .copyWith(textScaler: const TextScaler.linear(1.1)),
-                ),
-              ],
-            ),
-          ),
-          isExpanded: item.isExpanded,
-        );
-      }).toList(),
+      expansionCallback: (int index, bool isExpanded) => expantionCallback(index, isExpanded),
+      children: data
+          .asMap()
+          .map((int index, Item item) {
+            return MapEntry(
+                index,
+                ExpansionPanel(
+                  headerBuilder: (BuildContext context, bool isExpanded) {
+                    return ListTile(
+                      title: Text(item.headerValue),
+                    );
+                  },
+                  
+                  body: ListTile(
+                    title: Column(
+                      children: [
+                        MarkdownBody(
+                          data: item.expandedValue,
+                          styleSheet:
+                              MarkdownStyleSheet.fromTheme(Theme.of(context))
+                                  .copyWith(
+                                      textScaler: const TextScaler.linear(1.1)),
+                        ),
+                      ],
+                    ),
+                  ),
+                  isExpanded: expantionData[index],
+                ));
+          })
+          .values
+          .toList(),
     );
   }
 }
@@ -87,7 +97,11 @@ class WikiPage extends ConsumerStatefulWidget {
   final String apiKey;
 
   static route(String query, String apiKey, int? localIndex) {
-    return MaterialPageRoute(builder: (_) => WikiPage(query: query, apiKey: apiKey,));
+    return MaterialPageRoute(
+        builder: (_) => WikiPage(
+              query: query,
+              apiKey: apiKey,
+            ));
   }
 
   @override
@@ -96,9 +110,11 @@ class WikiPage extends ConsumerStatefulWidget {
 
 class _WikiPageState extends ConsumerState<WikiPage> {
   var isSaved = false;
+
   @override
   Widget build(BuildContext context) {
-    final AsyncValue<Wiki> wiki = ref.watch(WikiProvider(widget.query, widget.apiKey));
+    final AsyncValue<Wiki> wiki =
+        ref.watch(WikiProvider(widget.query, widget.apiKey));
     final theme = Theme.of(context);
     return switch (wiki) {
       AsyncData(:final value) => Scaffold(
@@ -125,7 +141,6 @@ class _WikiPageState extends ConsumerState<WikiPage> {
                       await ref
                           .read(wikisControllerProvider.notifier)
                           .removeLastWiki();
-                      
                     } else {
                       setState(() {
                         isSaved = true;
@@ -133,7 +148,7 @@ class _WikiPageState extends ConsumerState<WikiPage> {
 
                       await ref
                           .read(wikisControllerProvider.notifier)
-                          .addWiki(value);
+                          .addWiki(value, 0);
                     }
                   },
                   icon: Icon(isSaved ? Icons.bookmark : Icons.bookmark_border))
@@ -160,7 +175,9 @@ class _WikiPageState extends ConsumerState<WikiPage> {
                 ),
               ),
               const Divider(),
-              SectionsExpansionPanelList(data: generateItems(value.sections))
+              SectionsExpansionPanelList(
+                generateItems(value.sections),
+              )
             ],
           ),
         ),
@@ -210,7 +227,6 @@ class _LocalWikiPageState extends ConsumerState<LocalWikiPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.surface,
@@ -234,14 +250,14 @@ class _LocalWikiPageState extends ConsumerState<LocalWikiPage> {
                 });
                 await ref
                     .read(wikisControllerProvider.notifier)
-                    .removeLastWiki();
+                    .removeWiki(widget._wiki.id);
               } else {
                 setState(() {
                   isSaved = true;
                 });
                 await ref
                     .read(wikisControllerProvider.notifier)
-                    .addWiki(widget._wiki);
+                    .addWiki(widget._wiki, widget._wiki.id);
               }
             },
             icon: Icon(isSaved ? Icons.bookmark : Icons.bookmark_border),
@@ -269,7 +285,7 @@ class _LocalWikiPageState extends ConsumerState<LocalWikiPage> {
             ),
           ),
           const Divider(),
-          SectionsExpansionPanelList(data: generateItems(widget._wiki.sections))
+          SectionsExpansionPanelList(generateItems(widget._wiki.sections))
         ],
       ),
     );
