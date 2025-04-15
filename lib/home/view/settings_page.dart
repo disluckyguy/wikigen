@@ -17,6 +17,7 @@ class SettingsPage extends ConsumerWidget {
               ListTile(
                 
                   title: const Text("Gemini API key"),
+                  subtitle: const SelectableText("Go to \"https://aistudio.google.com/app/apikey\" to get one", ),
                   trailing: FutureBuilder<String?>(
                     builder: (context, snapshot) {
                       final controller = TextEditingController(text: snapshot.data ?? "");

@@ -40,22 +40,26 @@ class _SectionsExpansionPanelListState
   Widget build(BuildContext context) {
     if (expantionData.isEmpty) {
       setState(() {
-      expantionData = List.filled(widget.data.length, false);
-    });
-    } 
+        expantionData = List.filled(widget.data.length, false);
+      });
+    }
     return SingleChildScrollView(
       child: Container(
-        child: _buildPanel(context, widget.data, expantionData, (index, value) {setState(() {
-          expantionData[index] = value;
-        });}),
+        child: _buildPanel(context, widget.data, expantionData, (index, value) {
+          setState(() {
+            expantionData[index] = value;
+          });
+        }),
       ),
     );
   }
 
-  Widget _buildPanel(
-      BuildContext context, List<Item> data, List<bool> expantionData, Function(int, bool) expantionCallback) {
+  Widget _buildPanel(BuildContext context, List<Item> data,
+      List<bool> expantionData, Function(int, bool) expantionCallback) {
+    final theme = Theme.of(context);
     return ExpansionPanelList(
-      expansionCallback: (int index, bool isExpanded) => expantionCallback(index, isExpanded),
+      expansionCallback: (int index, bool isExpanded) =>
+          expantionCallback(index, isExpanded),
       children: data
           .asMap()
           .map((int index, Item item) {
@@ -64,10 +68,9 @@ class _SectionsExpansionPanelListState
                 ExpansionPanel(
                   headerBuilder: (BuildContext context, bool isExpanded) {
                     return ListTile(
-                      title: Text(item.headerValue),
+                      title: Text(item.headerValue, style: theme.textTheme.titleLarge,),
                     );
                   },
-                  
                   body: ListTile(
                     title: Column(
                       children: [
@@ -76,7 +79,7 @@ class _SectionsExpansionPanelListState
                           styleSheet:
                               MarkdownStyleSheet.fromTheme(Theme.of(context))
                                   .copyWith(
-                                      textScaler: const TextScaler.linear(1.1)),
+                                      textScaler: const TextScaler.linear(1.3)),
                         ),
                       ],
                     ),
@@ -90,7 +93,7 @@ class _SectionsExpansionPanelListState
   }
 }
 
-class WikiPage extends ConsumerStatefulWidget {
+class WikiPage extends ConsumerWidget {
   const WikiPage({required this.query, required this.apiKey, super.key});
 
   final String query;
@@ -105,16 +108,8 @@ class WikiPage extends ConsumerStatefulWidget {
   }
 
   @override
-  ConsumerState<ConsumerStatefulWidget> createState() => _WikiPageState();
-}
-
-class _WikiPageState extends ConsumerState<WikiPage> {
-  var isSaved = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final AsyncValue<Wiki> wiki =
-        ref.watch(WikiProvider(widget.query, widget.apiKey));
+  Widget build(BuildContext context, WidgetRef ref) {
+    final AsyncValue<Wiki> wiki = ref.watch(WikiProvider(query, apiKey));
     final theme = Theme.of(context);
     return switch (wiki) {
       AsyncData(:final value) => Scaffold(
@@ -131,37 +126,16 @@ class _WikiPageState extends ConsumerState<WikiPage> {
                     ?.copyWith(color: theme.colorScheme.onSurface),
               ),
             ),
-            actions: [
-              IconButton(
-                  onPressed: () async {
-                    if (isSaved) {
-                      setState(() {
-                        isSaved = false;
-                      });
-                      await ref
-                          .read(wikisControllerProvider.notifier)
-                          .removeLastWiki();
-                    } else {
-                      setState(() {
-                        isSaved = true;
-                      });
-
-                      await ref
-                          .read(wikisControllerProvider.notifier)
-                          .addWiki(value, 0);
-                    }
-                  },
-                  icon: Icon(isSaved ? Icons.bookmark : Icons.bookmark_border))
-            ],
+            actions: [BookmarkButton(wiki: wiki.value)],
           ),
           body: ListView(
             padding: const EdgeInsets.all(8),
             children: [
               Padding(
-                padding: const EdgeInsets.all(8.0),
+                padding: const EdgeInsets.all(12.0),
                 child: Text(
                   value.summary,
-                  style: theme.textTheme.titleMedium,
+                  style: theme.textTheme.titleLarge,
                 ),
               ),
               Padding(
@@ -170,7 +144,7 @@ class _WikiPageState extends ConsumerState<WikiPage> {
                   padding: const EdgeInsets.all(8.0),
                   child: Text(
                     value.introduction,
-                    style: theme.textTheme.bodyLarge,
+                    style: theme.textTheme.bodyLarge?.copyWith(fontSize: 20),
                   ),
                 ),
               ),
@@ -181,21 +155,7 @@ class _WikiPageState extends ConsumerState<WikiPage> {
             ],
           ),
         ),
-      AsyncError() => Expanded(
-            child: Center(
-          child: Column(
-            children: [
-              const Text("Something went wrong :("),
-              TextButton.icon(
-                onPressed: () {
-                  Navigator.of(context).pop(context);
-                },
-                label: const Text("Go Back"),
-                icon: const Icon(Icons.chevron_left),
-              )
-            ],
-          ),
-        )),
+      AsyncError(:final error) => ErrorPage(error: error.toString()),
       _ => const Scaffold(
           body: Center(
             child: CircularProgressIndicator(),
@@ -205,89 +165,163 @@ class _WikiPageState extends ConsumerState<WikiPage> {
   }
 }
 
-class LocalWikiPage extends ConsumerStatefulWidget {
-  const LocalWikiPage({required Wiki wiki, super.key}) : _wiki = wiki;
+class LocalWikiPage extends ConsumerWidget {
+  const LocalWikiPage({super.key, required this.id});
 
-  final Wiki _wiki;
-
-  static route(Wiki wiki) {
-    return MaterialPageRoute(
-        builder: (_) => LocalWikiPage(
-              wiki: wiki,
-            ));
+  static route(int id) {
+    return MaterialPageRoute(builder: (BuildContext context) {
+      return LocalWikiPage(id: id);
+    });
   }
 
+  final int id;
   @override
-  ConsumerState<ConsumerStatefulWidget> createState() => _LocalWikiPageState();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final AsyncValue<Wiki> wiki = ref.watch(LocalWikiProvider(id));
+
+    return switch (wiki) {
+      AsyncData(:final value) => Scaffold(
+          appBar: AppBar(
+            backgroundColor: Theme.of(context).colorScheme.surface,
+            leading: BackButton(
+              onPressed: () => {Navigator.of(context).pop()},
+            ),
+            title: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                value.title,
+                style: theme.textTheme.titleLarge
+                    ?.copyWith(color: theme.colorScheme.onSurface),
+              ),
+            ),
+            actions: [
+              BookmarkButton(
+                wiki: value,
+                isSaved: true,
+              )
+            ],
+          ),
+          body: ListView(
+            padding: const EdgeInsets.all(8),
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Text(
+                  value.summary,
+                  style: theme.textTheme.titleLarge,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    value.introduction,
+                    style: theme.textTheme.bodyLarge?.copyWith(fontSize: 20),
+                  ),
+                ),
+              ),
+              const Divider(),
+              SectionsExpansionPanelList(generateItems(value.sections))
+            ],
+          ),
+        ),
+      AsyncError(:final error) => ErrorPage(error: error.toString()),
+      _ => const Scaffold(
+          body: Center(
+            child: CircularProgressIndicator(),
+          ),
+        )
+    };
+  }
 }
 
-class _LocalWikiPageState extends ConsumerState<LocalWikiPage> {
-  bool isSaved = true;
+
+// ignore: must_be_immutable
+class BookmarkButton extends ConsumerStatefulWidget {
+  BookmarkButton({super.key, required Wiki wiki, bool isSaved = false}) : _wiki = wiki, _isSaved = isSaved;
+
+  final Wiki _wiki;
+  bool _isSaved;
+  @override
+  ConsumerState<ConsumerStatefulWidget> createState() => _BookmarkButtonState();
+}
+
+class _BookmarkButtonState extends ConsumerState<BookmarkButton> {
+  @override
+  Widget build(BuildContext context) {
+    final messenger = ScaffoldMessenger.of(context);
+    return IconButton(
+      onPressed: () async {
+        if (widget._isSaved) {
+          messenger.clearSnackBars();
+          messenger.showSnackBar(bookmarkSnackbar("Bookmark Removed"));
+          setState(() {
+            widget._isSaved = false;
+          });
+          await ref
+              .read(wikisControllerProvider.notifier)
+              .removeWiki(widget._wiki.id);
+        } else {
+          messenger.clearSnackBars();
+          messenger.showSnackBar(bookmarkSnackbar("Bookmark Added"));
+          setState(() {
+            widget._isSaved = true;
+          });
+          await ref
+              .read(wikisControllerProvider.notifier)
+              .addWiki(widget._wiki, widget._wiki.id);
+        }
+      },
+      icon: Icon(
+          widget._isSaved ? Icons.bookmark_rounded : Icons.bookmark_outline_rounded),
+    );
+  }
+}
+
+class ErrorPage extends StatelessWidget {
+  const ErrorPage({super.key, required this.error});
+
+  final String error;
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        leading: BackButton(
-          onPressed: () => {Navigator.of(context).pop()},
-        ),
-        title: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Text(
-            widget._wiki.title,
-            style: theme.textTheme.titleLarge
-                ?.copyWith(color: theme.colorScheme.onSurface),
-          ),
-        ),
-        actions: [
-          IconButton(
-            onPressed: () async {
-              if (isSaved) {
-                setState(() {
-                  isSaved = false;
-                });
-                await ref
-                    .read(wikisControllerProvider.notifier)
-                    .removeWiki(widget._wiki.id);
-              } else {
-                setState(() {
-                  isSaved = true;
-                });
-                await ref
-                    .read(wikisControllerProvider.notifier)
-                    .addWiki(widget._wiki, widget._wiki.id);
-              }
-            },
-            icon: Icon(isSaved ? Icons.bookmark : Icons.bookmark_border),
-          ),
-        ],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(8),
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(
-              widget._wiki.summary,
-              style: theme.textTheme.titleMedium,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          spacing: 8,
+          children: [
+            Icon(
+              Icons.error_outline_rounded,
+              size: 128,
+              color: theme.colorScheme.error,
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(
-                widget._wiki.introduction,
-                style: theme.textTheme.bodyLarge,
-              ),
+            Text(
+              "Error: ${error.toString()}",
+              style: theme.textTheme.titleLarge,
             ),
-          ),
-          const Divider(),
-          SectionsExpansionPanelList(generateItems(widget._wiki.sections))
-        ],
+            TextButton.icon(
+              onPressed: () {
+                Navigator.of(context).pop(context);
+              },
+              label: const Text("Go Back"),
+              icon: const Icon(Icons.chevron_left),
+            )
+          ],
+        ),
       ),
     );
   }
+}
+
+SnackBar bookmarkSnackbar(String text) {
+  return SnackBar(
+    content: Text(text),
+    behavior: SnackBarBehavior.floating,
+    margin: const EdgeInsets.all(4),
+    padding: const EdgeInsets.all(8),
+    showCloseIcon: true,
+  );
 }

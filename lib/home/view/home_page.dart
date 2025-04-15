@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/src/shared_preferences_async.dart';
 import 'package:wiki_repository/wiki_repository.dart';
 import 'package:wikigen/home/domain/app_domain.dart';
 import 'package:wikigen/home/view/settings_page.dart';
@@ -27,8 +26,7 @@ class _AppPageState extends ConsumerState<AppPage> {
             });
           },
         ),
-      1 => Container(),
-      2 => const SettingsPage(),
+      1 => const SettingsPage(),
       _ => null,
     };
 
@@ -61,6 +59,7 @@ class HomePage extends ConsumerWidget {
     final wikis = ref.watch(wikisControllerProvider);
     final preferences = ref.watch(preferencesProvider);
     final theme = Theme.of(context);
+    final messenger = ScaffoldMessenger.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -118,9 +117,10 @@ class HomePage extends ConsumerWidget {
 
                                 return Card.filled(
                                   child: InkWell(
-                                    onTap: () {
-                                      Navigator.of(context)
-                                          .push(LocalWikiPage.route(item));
+                                    onTap: () async {
+                                      Navigator.of(context).push(
+                                        LocalWikiPage.route(item.id),
+                                      );
                                     },
                                     child: Padding(
                                       padding: const EdgeInsets.all(4.0),
@@ -149,6 +149,26 @@ class HomePage extends ConsumerWidget {
                                                             wikisControllerProvider
                                                                 .notifier)
                                                         .removeWiki(item.id);
+                                                    var snackbar = SnackBar(
+                                                      margin: const EdgeInsets.all(8),
+                                                      padding: const EdgeInsets.all(8),
+                                                      showCloseIcon: true,
+                                                      behavior: SnackBarBehavior.floating,
+                                                      content: Text(
+                                                          "Removed \"${item.title}\""),
+                                                          
+                                                      action: SnackBarAction(
+                                                          label: "Undo",
+                                                          onPressed: () async {
+                                                            messenger.removeCurrentSnackBar();
+                                                            await ref
+                                                                .read(wikisControllerProvider
+                                                                    .notifier)
+                                                                .addWiki(item, item.id);
+                                                          }),
+                                                    );
+
+                                                    messenger.showSnackBar(snackbar);
                                                   },
                                                   icon: const Icon(
                                                     Icons.delete,
@@ -206,9 +226,9 @@ class HomePage extends ConsumerWidget {
                     enabled: snapshot.data?.isNotEmpty ?? false,
                     controller: _controller,
                     onSubmitted: (value) {
-                      _controller.text = "";
                       Navigator.of(context).push(WikiPage.route(
                           _controller.text, snapshot.data ?? "", null));
+                      _controller.text = "";
                     },
                   ),
                 );
